@@ -8,24 +8,32 @@
 #include <type_traits.h>
 #include <value_traits.h>
 
+#include <pair.h>
+
 using namespace xx;
 
 int main(int argc, char *argv[])
 {
     unused(argc, argv);
 
+    Pair<char, int> p1;
+    Pair<char, int, true> p2;
+    unused(p1, p2);
+
+    ///////////////////
+
     int i;
     char c;
     std::string s;
     double d;
 
-    Tuple<int, char, std::string, double> t1;
-    Tuple<int, char, std::string, double> t2(t1);
-    Tuple<int, char, std::string, std::string> t22;
-    Tuple<int, char, std::string> t222;
-    Tuple<double, std::string, char, int> t3;
-    Tuple<std::string, char, int, double> t4;
-    Tuple<char, int, std::string, double> t44;
+    Struct<int, char, std::string, double> t1;
+    Struct<int, char, std::string, double> t2(t1);
+    Struct<int, char, std::string, std::string> t22;
+    Struct<int, char, std::string> t222;
+    Struct<double, std::string, char, int> t3;
+    Struct<std::string, char, int, double> t4;
+    Struct<char, int, std::string, double> t44;
 
     t1.get(t2);
     t1.set(t2);
@@ -66,7 +74,7 @@ int main(int argc, char *argv[])
     t1.invoke(f);
 
     t2.set(11, 22, "ssttrr", 33.0);
-    const Tuple<int, char, std::string, double> t11(t2);
+    const Struct<int, char, std::string, double> t11(t2);
 
     auto ff = [] (const int& ii, const char& cc, const std::string& ss, const double& dd)
     {
@@ -82,6 +90,8 @@ int main(int argc, char *argv[])
     t11.invoke(ff);
 
     std::string ss = t11.invoke(UInt<0,1,2,3>(), [] (const int&, const char&, const std::string& s, const double&) { return s; });
+
+    std::cout << "t1 size: " << sizeof(t1) << std::endl;
 
     return 0;
 }

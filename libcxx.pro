@@ -19,6 +19,7 @@ INCLUDEPATH += include
 HEADERS += \
     include/global.h \
     include/mux.h \
+    include/pair.h \
     include/tuple.h \
     include/type_traits.h \
     include/value_traits.h \

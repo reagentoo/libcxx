@@ -4,6 +4,7 @@
 #include <type_traits>
 
 #include <mux.h>
+#include <pair.h>
 #include <range.h>
 #include <variadic_traits.h>
 
@@ -11,22 +12,22 @@ namespace xx {
 
 /* =============== */
 /* Tuple container */
-template <class... _Pack>
+template <bool _union, class... _Pack>
 class Tuple
 {
-    template <class...>
+    template <bool, class...>
     friend class Tuple;
-    using This = Tuple<_Pack...>;
+    using This = Tuple<_union, _Pack...>;
 
     // alias stub for build with clang
     template <class... _Xs>
-    using Tpl = Tuple<_Xs...>;
+    using Tpl = Tuple<_union, _Xs...>;
 
     template <uint _i>
     using At = MuxType<_i, _Pack...>;
 
     template <uint... _i>
-    using Custom = Tuple<At<_i>...>;
+    using Custom = Tpl<At<_i>...>;
 
     template <uint _i, uint _s, bool _r = false>
     using Expand = RangeExpand<_i, _s, _r>;
@@ -47,13 +48,13 @@ protected:
     /* Subtuple getters */
     template <uint _i>
     inline auto& tail(const UInt<_i>)
-    { return m_xs.tail(UInt<_i - 1>()); }
+    { return m_xs().tail(UInt<_i - 1>()); }
     inline auto& tail(const UInt<0>)
     { return *this; }
 
     template <uint _i>
     inline const auto& tail(const UInt<_i>) const
-    { return m_xs.tail(UInt<_i - 1>()); }
+    { return m_xs().tail(UInt<_i - 1>()); }
     inline const auto& tail(const UInt<0>) const
     { return *this; }
 
@@ -110,10 +111,10 @@ public:
     /* Simple value getters */
     template <uint _i>
     inline auto& value(const UInt<_i>)
-    { return tail(UInt<_i>()).m_x; }
+    { return tail(UInt<_i>()).m_x(); }
     template <uint _i>
     inline const auto& value(const UInt<_i>) const
-    { return tail(UInt<_i>()).m_x; }
+    { return tail(UInt<_i>()).m_x(); }
 
 #ifdef ENABLE_PLAIN_WRAPPERS
     template <uint _i>
@@ -128,18 +129,18 @@ public:
     /* Base getters/setters */
     inline void get(This& t) const
     {
-        t.m_x = m_x;
-        m_xs.get(t.m_xs);
+        t.m_x() = m_x();
+        m_xs().get(t.m_xs());
     }
     inline void set(const This& t)
     {
-        m_x = t.m_x;
-        m_xs.set(t.m_xs);
+        m_x() = t.m_x();
+        m_xs().set(t.m_xs());
     }
     inline void set(This&& t)
     {
-        m_x = std::move(t.m_x);
-        m_xs.set(std::move(t.m_xs));
+        m_x() = std::move(t.m_x());
+        m_xs().set(std::move(t.m_xs()));
     }
 
     /* ________________________________ */
@@ -147,20 +148,20 @@ public:
     template <class... _Xs>
     inline void get(X& x, _Xs&... xs) const
     {
-        x = m_x;
-        m_xs.get(xs...);
+        x = m_x();
+        m_xs().get(xs...);
     }
     template <class... _Xs>
     inline void set(const X& x, const _Xs&... xs)
     {
-        m_x = x;
-        m_xs.set(xs...);
+        m_x() = x;
+        m_xs().set(xs...);
     }
     template <class... _Xs>
     inline void set(X&& x, _Xs&&... xs)
     {
-        m_x = std::move(x);
-        m_xs.set(std::move(xs)...);
+        m_x() = std::move(x);
+        m_xs().set(std::move(xs)...);
     }
 
     /* _______________________ */
@@ -208,7 +209,7 @@ public:
     inline void get(const UInt<_i, _is...>,
                     At<_i>& x, _Xs&... xs) const
     {
-        x = tail(UInt<_i>()).m_x;
+        x = tail(UInt<_i>()).m_x();
         get(UInt<_is...>(), xs...);
     }
     inline void get(const UInt<>) const
@@ -218,7 +219,7 @@ public:
     inline void set(const UInt<_i, _is...>,
                     const At<_i>& x, const _Xs&... xs)
     {
-        tail(UInt<_i>()).m_x = x;
+        tail(UInt<_i>()).m_x() = x;
         set(UInt<_is...>(), xs...);
     }
     inline void set(const UInt<>)
@@ -228,7 +229,7 @@ public:
     inline void set(const UInt<_i, _is...>,
                     At<_i>&& x, _Xs&&... xs)
     {
-        tail(UInt<_i>()).m_x = std::move(x);
+        tail(UInt<_i>()).m_x() = std::move(x);
         set(UInt<_is...>(), std::move(xs)...);
     }
     /* inline void set(const UInt<>&); */
@@ -253,7 +254,7 @@ public:
                          const Bool<false>,
                          X& x, _Xs&... xs) const
     {
-        x = m_x;
+        x = m_x();
         getRange(UInt<_s - 1>(), Bool<_r>(), xs...);
     }
     template <bool _r, class... _Xs>
@@ -266,41 +267,41 @@ public:
     template <uint _s, bool _r, class... _Xs>
     inline const auto& merge(const UInt<_s>,
                              const Bool<_r>,
-                             const Tuple<Extreme<_s, _r>, _Xs...>& t)
+                             const Tpl<Extreme<_s, _r>, _Xs...>& t)
     {
-        const auto& o = m_xs.merge(UInt<_s - 1>(), Bool<_r>(), t.tail(UInt<_r ? 0 : 1>()));
-        m_x = mux(UInt<_r ? 0 : 1>(), o, t).m_x;
+        const auto& o = m_xs().merge(UInt<_s - 1>(), Bool<_r>(), t.tail(UInt<_r ? 0 : 1>()));
+        m_x() = mux(UInt<_r ? 0 : 1>(), o, t).m_x();
         return o.tail(UInt<_r ? 1 : 0>());
     }
     template <bool _r, class... _Xs>
     inline const auto& merge(const UInt<0>,
                              const Bool<_r>,
-                             const Tuple<_Xs...>& t)
+                             const Tpl<_Xs...>& t)
     { return t; }
     template <bool _r, class... _Xs>
     inline const auto& merge(const UInt<0>,
                              const Bool<_r>,
-                             const Tuple<X, _Xs...>& t)
+                             const Tpl<X, _Xs...>& t)
     { return t; }
 
     template <uint _s, bool _r, class... _Xs>
     inline const auto& merge(const UInt<_s>,
                              const Bool<_r>,
-                             Tuple<Extreme<_s, _r>, _Xs...>&& t)
+                             Tpl<Extreme<_s, _r>, _Xs...>&& t)
     {
-        const auto& o = m_xs.merge(UInt<_s - 1>(), Bool<_r>(), std::move(t.tail(UInt<_r ? 0 : 1>())));
-        m_x = std::move(mux(UInt<_r ? 0 : 1>(), o, t).m_x);
+        const auto& o = m_xs().merge(UInt<_s - 1>(), Bool<_r>(), std::move(t.tail(UInt<_r ? 0 : 1>())));
+        m_x() = std::move(mux(UInt<_r ? 0 : 1>(), o, t).m_x());
         return o.tail(UInt<_r ? 1 : 0>());
     }
     template <bool _r, class... _Xs>
     inline const auto& merge(const UInt<0>,
                              const Bool<_r>,
-                             Tuple<_Xs...>&& t)
+                             Tpl<_Xs...>&& t)
     { return t; }
     template <bool _r, class... _Xs>
     inline const auto& merge(const UInt<0>,
                              const Bool<_r>,
-                             Tuple<X, _Xs...>&& t)
+                             Tpl<X, _Xs...>&& t)
     { return t; }
 
     template <uint _i, uint _j, uint _s, bool _r, class _T>
@@ -392,17 +393,25 @@ public:
 #endif
 
 private:
-    X  m_x;
-    Xs m_xs;
+    Pair<X, Xs, _union> m_;
+
+    inline X & m_x () { return m_.x(); }
+    inline Xs& m_xs() { return m_.y(); }
+
+    inline const X & m_x () const { return m_.x(); }
+    inline const Xs& m_xs() const { return m_.y(); }
 };
 
 /* Tuple container constraint*/
-template <>
-class Tuple<>
+template <bool _union>
+class Tuple<_union>
 {
-    template <class...>
+    template <bool, class...>
     friend class Tuple;
-    using This = Tuple<>;
+    using This = Tuple<_union>;
+
+    template <class... _Xs>
+    using Tpl = Tuple<_union, _Xs...>;
 
     template <class _T>
     using ResultOf = typename std::result_of<_T>::type;
@@ -508,12 +517,12 @@ public:
     template <bool _r, class... _Xs>
     inline const auto& merge(const UInt<0>,
                              const Bool<_r>,
-                             const Tuple<_Xs...>& t)
+                             const Tpl<_Xs...>& t)
     { return t; }
     template <bool _r, class... _Xs>
     inline auto&& merge(const UInt<0>,
                         const Bool<_r>,
-                        Tuple<_Xs...>&& t)
+                        Tpl<_Xs...>&& t)
     { return t; }
 
     template <bool _r, uint _j = 0, class _T>
@@ -563,6 +572,11 @@ public:
     -> ResultOf<_F()>
     { return func(); }
 };
+
+template <class... _Pack>
+using Struct = Tuple<false, _Pack...>;
+template <class... _Pack>
+using Union = Tuple<true, _Pack...>;
 
 }
 
