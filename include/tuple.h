@@ -19,15 +19,14 @@ class Tuple
     friend class Tuple;
     using This = Tuple<_union, _Pack...>;
 
-    // alias stub for build with clang
     template <class... _Xs>
-    using Tpl = Tuple<_union, _Xs...>;
+    using T = Tuple<_union, _Xs...>;
 
     template <uint _i>
     using At = MuxType<_i, _Pack...>;
 
     template <uint... _i>
-    using Custom = Tpl<At<_i>...>;
+    using Custom = T<At<_i>...>;
 
     template <uint _i, uint _s, bool _r = false>
     using Expand = RangeExpand<_i, _s, _r>;
@@ -36,10 +35,10 @@ class Tuple
     using Extreme = At<_i ? _r ? (_i - 1) : 0 : 0>;
 
     template <class _T>
-    using ResultOf = typename std::result_of<_T>::type;
+    using ResultOf = typename std::result_of_t<_T>;
 
     using X = Head<_Pack...>;
-    using Xs = Tail<Tpl, _Pack...>;
+    using Xs = Tail<T, _Pack...>;
 
     static constexpr uint m_size = sizeof...(_Pack);
 
@@ -105,7 +104,7 @@ public:
     /* ___________ */
     /* Comparation */
     inline auto eq(const This& t) const
-    { return m_x == t.m_x ? m_xs.eq(t.m_xs) : false; }
+    { return m_x() == t.m_x() ? m_xs().eq(t.m_xs()) : false; }
 
     /* ____________________ */
     /* Simple value getters */
@@ -267,7 +266,7 @@ public:
     template <uint _s, bool _r, class... _Xs>
     inline const auto& merge(const UInt<_s>,
                              const Bool<_r>,
-                             const Tpl<Extreme<_s, _r>, _Xs...>& t)
+                             const T<Extreme<_s, _r>, _Xs...>& t)
     {
         const auto& o = m_xs().merge(UInt<_s - 1>(), Bool<_r>(), t.tail(UInt<_r ? 0 : 1>()));
         m_x() = mux(UInt<_r ? 0 : 1>(), o, t).m_x();
@@ -276,18 +275,18 @@ public:
     template <bool _r, class... _Xs>
     inline const auto& merge(const UInt<0>,
                              const Bool<_r>,
-                             const Tpl<_Xs...>& t)
+                             const T<_Xs...>& t)
     { return t; }
     template <bool _r, class... _Xs>
     inline const auto& merge(const UInt<0>,
                              const Bool<_r>,
-                             const Tpl<X, _Xs...>& t)
+                             const T<X, _Xs...>& t)
     { return t; }
 
     template <uint _s, bool _r, class... _Xs>
     inline const auto& merge(const UInt<_s>,
                              const Bool<_r>,
-                             Tpl<Extreme<_s, _r>, _Xs...>&& t)
+                             T<Extreme<_s, _r>, _Xs...>&& t)
     {
         const auto& o = m_xs().merge(UInt<_s - 1>(), Bool<_r>(), std::move(t.tail(UInt<_r ? 0 : 1>())));
         m_x() = std::move(mux(UInt<_r ? 0 : 1>(), o, t).m_x());
@@ -296,12 +295,12 @@ public:
     template <bool _r, class... _Xs>
     inline const auto& merge(const UInt<0>,
                              const Bool<_r>,
-                             Tpl<_Xs...>&& t)
+                             T<_Xs...>&& t)
     { return t; }
     template <bool _r, class... _Xs>
     inline const auto& merge(const UInt<0>,
                              const Bool<_r>,
-                             Tpl<X, _Xs...>&& t)
+                             T<X, _Xs...>&& t)
     { return t; }
 
     template <uint _i, uint _j, uint _s, bool _r, class _T>
@@ -411,10 +410,10 @@ class Tuple<_union>
     using This = Tuple<_union>;
 
     template <class... _Xs>
-    using Tpl = Tuple<_union, _Xs...>;
+    using T = Tuple<_union, _Xs...>;
 
     template <class _T>
-    using ResultOf = typename std::result_of<_T>::type;
+    using ResultOf = typename std::result_of_t<_T>;
 
 protected:
     /* ________________ */
@@ -517,12 +516,12 @@ public:
     template <bool _r, class... _Xs>
     inline const auto& merge(const UInt<0>,
                              const Bool<_r>,
-                             const Tpl<_Xs...>& t)
+                             const T<_Xs...>& t)
     { return t; }
     template <bool _r, class... _Xs>
     inline auto&& merge(const UInt<0>,
                         const Bool<_r>,
-                        Tpl<_Xs...>&& t)
+                        T<_Xs...>&& t)
     { return t; }
 
     template <bool _r, uint _j = 0, class _T>

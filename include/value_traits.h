@@ -16,36 +16,36 @@ struct Value
 };
 
 /* Value aliases */
-template <bool... _i>
-using Bool = Value<bool, _i...>;
+template <bool... _xs>
+using Bool = Value<bool, _xs...>;
 
-template <char... _i>
-using Char = Value<char, _i...>;
-template <short... _i>
-using Short = Value<short, _i...>;
-template <int... _i>
-using Int = Value<int, _i...>;
-template <long... _i>
-using Long = Value<long, _i...>;
-template <longlong... _i>
-using LongLong = Value<longlong, _i...>;
+template <char... _xs>
+using Char = Value<char, _xs...>;
+template <short... _xs>
+using Short = Value<short, _xs...>;
+template <int... _xs>
+using Int = Value<int, _xs...>;
+template <long... _xs>
+using Long = Value<long, _xs...>;
+template <longlong... _xs>
+using LongLong = Value<longlong, _xs...>;
 
-template <uchar... _i>
-using UChar = Value<uchar, _i...>;
-template <ushort... _i>
-using UShort = Value<ushort, _i...>;
-template <uint... _i>
-using UInt = Value<uint, _i...>;
-template <ulong... _i>
-using ULong = Value<ulong, _i...>;
-template <ulonglong... _i>
-using ULongLong = Value<ulonglong, _i...>;
+template <uchar... _xs>
+using UChar = Value<uchar, _xs...>;
+template <ushort... _xs>
+using UShort = Value<ushort, _xs...>;
+template <uint... _xs>
+using UInt = Value<uint, _xs...>;
+template <ulong... _xs>
+using ULong = Value<ulong, _xs...>;
+template <ulonglong... _xs>
+using ULongLong = Value<ulonglong, _xs...>;
 
 /* Validator constraint */
-template <class _X, Type::E _e, TypeValidator<_X, _e>... _i>
-struct Type::Validator<Value<_X, _i...>, _e>
+template <class _X, Type::E _e, TypeValidator<_X, _e>... _xs>
+struct Type::Validator<Value<_X, _xs...>, _e>
 {
-    using Type = Value<_X, _i...>;
+    using Type = Value<_X, _xs...>;
 };
 
 }

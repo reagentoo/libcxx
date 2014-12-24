@@ -10,8 +10,8 @@ using ushort = unsigned short; // 16 bit unsigned
 using uint   = unsigned int;   // 32 bit unsigned
 using ulong  = unsigned long;  // 32 bit unsigned
 
-using longlong  = long long;         // 64 bit signed
-using ulonglong = unsigned longlong; // 64 bit unsigned
+using longlong  = long long;          // 64 bit signed
+using ulonglong = unsigned long long; // 64 bit unsigned
 
 /* ==== */
 /* Type */
