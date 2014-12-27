@@ -4,7 +4,6 @@
 #include <type_traits>
 
 #include <mux.h>
-#include <pair.h>
 #include <range.h>
 #include <variadic_traits.h>
 
@@ -47,13 +46,13 @@ protected:
     /* Subtuple getters */
     template <uint _i>
     inline auto& tail(const UInt<_i>)
-    { return m_xs().tail(UInt<_i - 1>()); }
+    { return m_.xs.tail(UInt<_i - 1>()); }
     inline auto& tail(const UInt<0>)
     { return *this; }
 
     template <uint _i>
     inline const auto& tail(const UInt<_i>) const
-    { return m_xs().tail(UInt<_i - 1>()); }
+    { return m_.xs.tail(UInt<_i - 1>()); }
     inline const auto& tail(const UInt<0>) const
     { return *this; }
 
@@ -70,24 +69,33 @@ protected:
 public:
     /* ____________ */
     /* Constructors */
-    inline Tuple() {}
+    inline Tuple()
+    { }
 
-    inline Tuple(const This& t)
-    { set(t); }
-    inline Tuple(This&& t)
-    { set(std::move(t)); }
+    inline Tuple(const This& t) :
+        m_(t.m_.x,
+           t.m_.xs)
+    { }
+    inline Tuple(This&& t) :
+        m_(std::move(t.m_.x),
+           std::move(t.m_.xs))
+    { }
 
-    inline Tuple(const _Pack&... xs)
-    { set(xs...); }
-    inline Tuple(_Pack&&... xs)
-    { set(std::move(xs)...); }
+    template <class... _Xs>
+    inline Tuple(const X& x, const _Xs&... xs) :
+        m_(x, Xs(xs...))
+    { }
+    template <class... _Xs>
+    inline Tuple(X&& x, _Xs&&... xs):
+        m_(std::move(x), Xs(std::move(xs)...))
+    { }
 
     /* _________ */
     /* Operators */
     inline auto operator ==(const This& t) const
     { return eq(t); }
     inline auto operator !=(const This& t) const
-    { return !eq(t); }
+    { return neq(t); }
 
     template <uint _i>
     inline auto& operator [](const UInt<_i>)
@@ -104,16 +112,18 @@ public:
     /* ___________ */
     /* Comparation */
     inline auto eq(const This& t) const
-    { return m_x() == t.m_x() ? m_xs().eq(t.m_xs()) : false; }
+    { return m_.x == t.m_.x ? m_.xs.eq(t.m_.xs) : false; }
+    inline auto neq(const This& t) const
+    { return m_.x != t.m_.x ? true : m_.xs.neq(t.m_.xs); }
 
     /* ____________________ */
     /* Simple value getters */
     template <uint _i>
     inline auto& value(const UInt<_i>)
-    { return tail(UInt<_i>()).m_x(); }
+    { return tail(UInt<_i>()).m_.x; }
     template <uint _i>
     inline const auto& value(const UInt<_i>) const
-    { return tail(UInt<_i>()).m_x(); }
+    { return tail(UInt<_i>()).m_.x; }
 
 #ifdef ENABLE_PLAIN_WRAPPERS
     template <uint _i>
@@ -128,18 +138,18 @@ public:
     /* Base getters/setters */
     inline void get(This& t) const
     {
-        t.m_x() = m_x();
-        m_xs().get(t.m_xs());
+        t.m_.x = m_.x;
+        m_.xs.get(t.m_.xs);
     }
     inline void set(const This& t)
     {
-        m_x() = t.m_x();
-        m_xs().set(t.m_xs());
+        m_.x = t.m_.x;
+        m_.xs.set(t.m_.xs);
     }
     inline void set(This&& t)
     {
-        m_x() = std::move(t.m_x());
-        m_xs().set(std::move(t.m_xs()));
+        m_.x = std::move(t.m_.x);
+        m_.xs.set(std::move(t.m_.xs));
     }
 
     /* ________________________________ */
@@ -147,20 +157,20 @@ public:
     template <class... _Xs>
     inline void get(X& x, _Xs&... xs) const
     {
-        x = m_x();
-        m_xs().get(xs...);
+        x = m_.x;
+        m_.xs.get(xs...);
     }
     template <class... _Xs>
     inline void set(const X& x, const _Xs&... xs)
     {
-        m_x() = x;
-        m_xs().set(xs...);
+        m_.x = x;
+        m_.xs.set(xs...);
     }
     template <class... _Xs>
     inline void set(X&& x, _Xs&&... xs)
     {
-        m_x() = std::move(x);
-        m_xs().set(std::move(xs)...);
+        m_.x = std::move(x);
+        m_.xs.set(std::move(xs)...);
     }
 
     /* _______________________ */
@@ -208,7 +218,7 @@ public:
     inline void get(const UInt<_i, _is...>,
                     At<_i>& x, _Xs&... xs) const
     {
-        x = tail(UInt<_i>()).m_x();
+        x = tail(UInt<_i>()).m_.x;
         get(UInt<_is...>(), xs...);
     }
     inline void get(const UInt<>) const
@@ -218,7 +228,7 @@ public:
     inline void set(const UInt<_i, _is...>,
                     const At<_i>& x, const _Xs&... xs)
     {
-        tail(UInt<_i>()).m_x() = x;
+        tail(UInt<_i>()).m_.x = x;
         set(UInt<_is...>(), xs...);
     }
     inline void set(const UInt<>)
@@ -228,7 +238,7 @@ public:
     inline void set(const UInt<_i, _is...>,
                     At<_i>&& x, _Xs&&... xs)
     {
-        tail(UInt<_i>()).m_x() = std::move(x);
+        tail(UInt<_i>()).m_.x = std::move(x);
         set(UInt<_is...>(), std::move(xs)...);
     }
     /* inline void set(const UInt<>&); */
@@ -253,7 +263,7 @@ public:
                          const Bool<false>,
                          X& x, _Xs&... xs) const
     {
-        x = m_x();
+        x = m_.x;
         getRange(UInt<_s - 1>(), Bool<_r>(), xs...);
     }
     template <bool _r, class... _Xs>
@@ -268,8 +278,8 @@ public:
                              const Bool<_r>,
                              const T<Extreme<_s, _r>, _Xs...>& t)
     {
-        const auto& o = m_xs().merge(UInt<_s - 1>(), Bool<_r>(), t.tail(UInt<_r ? 0 : 1>()));
-        m_x() = mux(UInt<_r ? 0 : 1>(), o, t).m_x();
+        const auto& o = m_.xs.merge(UInt<_s - 1>(), Bool<_r>(), t.tail(UInt<_r ? 0 : 1>()));
+        m_.x = mux(UInt<_r ? 0 : 1>(), o, t).m_.x;
         return o.tail(UInt<_r ? 1 : 0>());
     }
     template <bool _r, class... _Xs>
@@ -288,8 +298,8 @@ public:
                              const Bool<_r>,
                              T<Extreme<_s, _r>, _Xs...>&& t)
     {
-        const auto& o = m_xs().merge(UInt<_s - 1>(), Bool<_r>(), std::move(t.tail(UInt<_r ? 0 : 1>())));
-        m_x() = std::move(mux(UInt<_r ? 0 : 1>(), o, t).m_x());
+        const auto& o = m_.xs.merge(UInt<_s - 1>(), Bool<_r>(), std::move(t.tail(UInt<_r ? 0 : 1>())));
+        m_.x = std::move(mux(UInt<_r ? 0 : 1>(), o, t).m_.x);
         return o.tail(UInt<_r ? 1 : 0>());
     }
     template <bool _r, class... _Xs>
@@ -392,13 +402,31 @@ public:
 #endif
 
 private:
-    Pair<X, Xs, _union> m_;
+    struct S
+    {
+         S() { }
+        ~S() { }
 
-    inline X & m_x () { return m_.x(); }
-    inline Xs& m_xs() { return m_.y(); }
+        S(const X&  x_, const Xs&  xs_) : x (x_), xs(xs_) { }
+        S(      X&& x_,       Xs&& xs_) : x (x_), xs(xs_) { }
 
-    inline const X & m_x () const { return m_.x(); }
-    inline const Xs& m_xs() const { return m_.y(); }
+        X  x;
+        Xs xs;
+    };
+
+    union U
+    {
+         U() { }
+        ~U() { }
+
+        U(const X& , const Xs& ) { }
+        U(      X&&,       Xs&&) { }
+
+        X  x;
+        Xs xs;
+    };
+
+    MuxType<_union ? 1 : 0, S, U> m_;
 };
 
 /* Tuple container constraint*/
@@ -436,15 +464,19 @@ public:
     /* ____________ */
     /* Constructors */
     inline Tuple()
-    {}
+    { }
 
-    inline Tuple(const This&) {}
-    inline Tuple(This&&) {}
+    inline Tuple(const This&)
+    { }
+    inline Tuple(This&&)
+    { }
 
     /* _________ */
     /* Operators */
-    inline auto operator ==(const This&) const { return true; }
-    inline auto operator !=(const This&) const { return false; }
+    inline auto operator ==(const This&) const
+    { return true; }
+    inline auto operator !=(const This&) const
+    { return false; }
 
     inline auto& operator =(const This&)
     { return *this; }
@@ -455,30 +487,37 @@ public:
     /* Comparation */
     inline auto eq(const This&) const
     { return true; }
+    inline auto neq(const This&) const
+    { return false; }
 
     /* ____________________ */
     /* Base getters/setters */
-    inline void get(This&) const {}
-    inline void set(const This&) {}
-    inline void set(This&&) {}
+    inline void get(This&) const
+    { }
+    inline void set(const This&)
+    { }
+    inline void set(This&&)
+    { }
 
     /* ________________________________ */
     /* Base getters/setters (separated) */
-    inline void get() const {}
-    inline void set() {}
+    inline void get() const
+    { }
+    inline void set()
+    { }
 
     /* _______________________ */
     /* Partial getters/setters */
     inline void get(const UInt<>,
                     This&) const
-    {}
+    { }
 
     inline void set(const UInt<>,
                     const This&)
-    {}
+    { }
     inline void set(const UInt<>,
                     This&&)
-    {}
+    { }
 
 #ifdef ENABLE_PLAIN_WRAPPERS
     template <uint... _is>
@@ -496,10 +535,10 @@ public:
     /* ___________________________________ */
     /* Partial getters/setters (separated) */
     inline void get(const UInt<>) const
-    {}
+    { }
 
     inline void set(const UInt<>)
-    {}
+    { }
 
 #ifdef ENABLE_PLAIN_WRAPPERS
     template <uint... _is>
@@ -572,6 +611,7 @@ public:
     { return func(); }
 };
 
+/* Tuple aliases */
 template <class... _Pack>
 using Struct = Tuple<false, _Pack...>;
 template <class... _Pack>

@@ -8,19 +8,11 @@
 #include <type_traits.h>
 #include <value_traits.h>
 
-#include <pair.h>
-
 using namespace xx;
 
 int main(int argc, char *argv[])
 {
     unused(argc, argv);
-
-    Pair<char, int> p1;
-    Pair<char, int, true> p2;
-    unused(p1, p2);
-
-    ///////////////////
 
     int i;
     char c;
@@ -34,6 +26,9 @@ int main(int argc, char *argv[])
     Struct<double, std::string, char, int> t3;
     Struct<std::string, char, int, double> t4;
     Struct<char, int, std::string, double> t44;
+    Struct<char, int, std::string, double> t5(c, i, s, d);
+
+    Union<int, char, std::string, double> u1;
 
     t1.get(t2);
     t1.set(t2);
