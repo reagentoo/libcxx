@@ -2,7 +2,9 @@
 #include <iostream>
 
 #define ENABLE_PLAIN_WRAPPERS
+#define ZERO_VALUE
 
+#include <backend.h>
 #include <global.h>
 #include <tuple.h>
 #include <type_traits.h>
@@ -10,9 +12,19 @@
 
 using namespace xx;
 
+struct MoveTest
+{
+    MoveTest() {}
+    MoveTest(MoveTest&)  { std::cout << "copy" << std::endl; }
+    MoveTest(MoveTest&&) { std::cout << "move" << std::endl; int i = move(i); }
+};
+
 int main(int argc, char *argv[])
 {
     unused(argc, argv);
+
+    MoveTest mt(mt);
+    MoveTest mt2(xx::move(mt));
 
     int i;
     char c;

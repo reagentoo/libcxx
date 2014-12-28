@@ -17,6 +17,7 @@ QMAKE_CXXFLAGS += -std=c++1y
 INCLUDEPATH += include
 
 HEADERS += \
+    include/backend.h \
     include/global.h \
     include/mux.h \
     include/tuple.h \

@@ -1,8 +1,7 @@
 #ifndef TUPLE_H
 #define TUPLE_H
 
-#include <type_traits>
-
+#include <backend.h>
 #include <mux.h>
 #include <range.h>
 #include <variadic_traits.h>
@@ -32,9 +31,6 @@ class Tuple
 
     template <uint _i, bool _r = false>
     using Extreme = At<_i ? _r ? (_i - 1) : 0 : 0>;
-
-    template <class _T>
-    using ResultOf = typename std::result_of_t<_T>;
 
     using X = Head<_Pack...>;
     using Xs = Tail<T, _Pack...>;
@@ -439,9 +435,6 @@ class Tuple<_union>
 
     template <class... _Xs>
     using T = Tuple<_union, _Xs...>;
-
-    template <class _T>
-    using ResultOf = typename std::result_of_t<_T>;
 
 protected:
     /* ________________ */

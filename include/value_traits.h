@@ -12,7 +12,15 @@ struct Value
 {
     using Type = _X;
     template <template <_X...> class _S>
-    using Pass = _S<_xs...>;
+    using Get = _S<_xs...>;
+
+private:
+    /* This field is required
+     * for zero weight of Value
+     */
+#ifdef ZERO_VALUE
+    _X x[0];
+#endif
 };
 
 /* Value aliases */
