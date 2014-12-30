@@ -25,6 +25,7 @@ int main(int argc, char *argv[])
 
     MoveTest mt(mt);
     MoveTest mt2(xx::move(mt));
+    unused(mt2);
 
     int i;
     char c;

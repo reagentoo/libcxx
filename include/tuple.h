@@ -73,17 +73,17 @@ public:
            t.m_.xs)
     { }
     inline Tuple(This&& t) :
-        m_(std::move(t.m_.x),
-           std::move(t.m_.xs))
+        m_(xx::move(t.m_.x),
+           xx::move(t.m_.xs))
     { }
 
     template <class... _Xs>
-    inline Tuple(const X& x, const _Xs&... xs) :
+    inline explicit Tuple(const X& x, const _Xs&... xs) :
         m_(x, Xs(xs...))
     { }
     template <class... _Xs>
-    inline Tuple(X&& x, _Xs&&... xs):
-        m_(std::move(x), Xs(std::move(xs)...))
+    inline explicit Tuple(X&& x, _Xs&&... xs):
+        m_(xx::move(x), Xs(xx::move(xs)...))
     { }
 
     /* _________ */
@@ -103,7 +103,7 @@ public:
     inline auto& operator =(const This& t)
     { set(t); return *this; }
     inline auto& operator =(This&& t)
-    { set(std::move(t)); return *this; }
+    { set(xx::move(t)); return *this; }
 
     /* ___________ */
     /* Comparation */
@@ -134,8 +134,11 @@ public:
     /* Base getters/setters */
     inline void get(This& t) const
     {
-        t.m_.x = m_.x;
-        m_.xs.get(t.m_.xs);
+        t.set(*this);
+    }
+    inline void get(This&& t)
+    {
+        t.set(xx::move(*this));
     }
     inline void set(const This& t)
     {
@@ -144,8 +147,8 @@ public:
     }
     inline void set(This&& t)
     {
-        m_.x = std::move(t.m_.x);
-        m_.xs.set(std::move(t.m_.xs));
+        m_.x = xx::move(t.m_.x);
+        m_.xs.set(xx::move(t.m_.xs));
     }
 
     /* ________________________________ */
@@ -157,6 +160,12 @@ public:
         m_.xs.get(xs...);
     }
     template <class... _Xs>
+    inline void get(X&& x, _Xs&&... xs)
+    {
+        x = xx::move(m_.x);
+        m_.xs.get(xx::move(xs)...);
+    }
+    template <class... _Xs>
     inline void set(const X& x, const _Xs&... xs)
     {
         m_.x = x;
@@ -165,8 +174,8 @@ public:
     template <class... _Xs>
     inline void set(X&& x, _Xs&&... xs)
     {
-        m_.x = std::move(x);
-        m_.xs.set(std::move(xs)...);
+        m_.x = xx::move(x);
+        m_.xs.set(xx::move(xs)...);
     }
 
     /* _______________________ */
@@ -177,6 +186,14 @@ public:
     {
         t.invoke([this](At<_is>&... xs) {
             get(UInt<_is...>(), xs...);
+        });
+    }
+    template <uint... _is>
+    inline void get(const UInt<_is...>,
+                    Custom<_is...>&& t)
+    {
+        t.invoke([this](At<_is>&... xs) {
+            get(UInt<_is...>(), xx::move(xs)...);
         });
     }
     template <uint... _is>
@@ -192,7 +209,7 @@ public:
                     Custom<_is...>&& t)
     {
         t.invoke([this](At<_is>&... xs) {
-            set(UInt<_is...>(), std::move(xs)...);
+            set(UInt<_is...>(), xx::move(xs)...);
         });
     }
 
@@ -201,11 +218,14 @@ public:
     inline void get(Custom<_is...>& t) const
     { get(UInt<_is...>(), t); }
     template <uint... _is>
+    inline void get(Custom<_is...>&& t)
+    { get(UInt<_is...>(), xx::move(t)); }
+    template <uint... _is>
     inline void set(const Custom<_is...>& t)
     { set(UInt<_is...>(), t); }
     template <uint... _is>
     inline void set(Custom<_is...>&& t)
-    { set(UInt<_is...>(), std::move(t)); }
+    { set(UInt<_is...>(), xx::move(t)); }
 #endif
 
     /* ___________________________________ */
@@ -218,6 +238,16 @@ public:
         get(UInt<_is...>(), xs...);
     }
     inline void get(const UInt<>) const
+    { /* stub */ }
+
+    template <uint _i, uint... _is, class... _Xs>
+    inline void get(const UInt<_i, _is...>,
+                    At<_i>&& x, _Xs&&... xs)
+    {
+        x = xx::move(tail(UInt<_i>()).m_.x);
+        get(UInt<_is...>(), xx::move(xs)...);
+    }
+    inline void get(const UInt<>)
     { /* stub */ }
 
     template <uint _i, uint... _is, class... _Xs>
@@ -234,8 +264,8 @@ public:
     inline void set(const UInt<_i, _is...>,
                     At<_i>&& x, _Xs&&... xs)
     {
-        tail(UInt<_i>()).m_.x = std::move(x);
-        set(UInt<_is...>(), std::move(xs)...);
+        tail(UInt<_i>()).m_.x = xx::move(x);
+        set(UInt<_is...>(), xx::move(xs)...);
     }
     /* inline void set(const UInt<>&); */
 
@@ -244,11 +274,14 @@ public:
     inline void get(At<_is>&... xs) const
     { get(UInt<_is...>(), xs...); }
     template <uint... _is>
+    inline void get(At<_is>&&... xs)
+    { get(UInt<_is...>(), xx::move(xs)...); }
+    template <uint... _is>
     inline void set(const At<_is>&... xs)
     { set(UInt<_is...>(), xs...); }
     template <uint... _is>
     inline void set(At<_is>&&... xs)
-    { set(UInt<_is...>(), std::move(xs)...); }
+    { set(UInt<_is...>(), xx::move(xs)...); }
 #endif
 
     /* _________________________________ */
@@ -294,8 +327,8 @@ public:
                              const Bool<_r>,
                              T<Extreme<_s, _r>, _Xs...>&& t)
     {
-        const auto& o = m_.xs.merge(UInt<_s - 1>(), Bool<_r>(), std::move(t.tail(UInt<_r ? 0 : 1>())));
-        m_.x = std::move(mux(UInt<_r ? 0 : 1>(), o, t).m_.x);
+        const auto& o = m_.xs.merge(UInt<_s - 1>(), Bool<_r>(), xx::move(t.tail(UInt<_r ? 0 : 1>())));
+        m_.x = xx::move(mux(UInt<_r ? 0 : 1>(), o, t).m_.x);
         return o.tail(UInt<_r ? 1 : 0>());
     }
     template <bool _r, class... _Xs>
@@ -318,7 +351,7 @@ public:
     inline const auto& merge(const UInt<_i, _j, _s>,
                              const Bool<_r>,
                              _T&& t)
-    { return tail(UInt<_i>()).merge(UInt<_s>(), Bool<_r>(), std::move(t.tail(UInt<_j>()))); }
+    { return tail(UInt<_i>()).merge(UInt<_s>(), Bool<_r>(), xx::move(t.tail(UInt<_j>()))); }
 
 #ifdef ENABLE_PLAIN_WRAPPERS
     template <uint _s, bool _r, class _T>
@@ -327,14 +360,14 @@ public:
 
     template <uint _s, bool _r, class _T>
     inline const auto& merge(_T&& t)
-    { return merge(UInt<_s>(), Bool<_r>(), std::move(t)); }
+    { return merge(UInt<_s>(), Bool<_r>(), xx::move(t)); }
 
     template <uint _i, uint _j, uint _s, bool _r, class _T>
     inline const auto& merge(const _T& t)
     { return merge(UInt<_i, _j, _s>(), Bool<_r>(), t); }
     template <uint _i, uint _j, uint _s, bool _r, class _T>
     inline const auto& merge(_T&& t)
-    { return merge(UInt<_i, _j, _s>(), Bool<_r>(), std::move(t)); }
+    { return merge(UInt<_i, _j, _s>(), Bool<_r>(), xx::move(t)); }
 #endif
 
     /* ______ */
@@ -522,7 +555,7 @@ public:
     { set(UInt<_is...>(), t); }
     template <uint... _is>
     inline void set(This&& t)
-    { set(UInt<_is...>(), std::move(t)); }
+    { set(UInt<_is...>(), xx::move(t)); }
 #endif
 
     /* ___________________________________ */
@@ -573,14 +606,14 @@ public:
     { return merge(UInt<_s>(), Bool<_r>(), t); }
     template <uint _s, bool _r, class _T>
     inline const auto& merge(_T&& t)
-    { return merge(UInt<_s>(), Bool<_r>(), std::move(t)); }
+    { return merge(UInt<_s>(), Bool<_r>(), xx::move(t)); }
 
     template <uint _i, uint _j, uint _s, bool _r, class _T>
     inline const auto& merge(const _T& t)
     { return merge(UInt<_s, _i, _j>(), Bool<_r>(), t); }
     template <uint _i, uint _j, uint _s, bool _r, class _T>
     inline const auto& merge(_T&& t)
-    { return merge(UInt<_s, _i, _j>(), Bool<_r>(), std::move(t)); }
+    { return merge(UInt<_s, _i, _j>(), Bool<_r>(), xx::move(t)); }
 #endif
 
     /* ______ */
