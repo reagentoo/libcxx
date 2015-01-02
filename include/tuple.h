@@ -65,8 +65,8 @@ protected:
 public:
     /* ____________ */
     /* Constructors */
-    inline Tuple()
-    { }
+    inline  Tuple() = default;
+    inline ~Tuple() = default;
 
     inline Tuple(const This& t) :
         m_(t.m_.x,
@@ -82,7 +82,7 @@ public:
         m_(x, Xs(xs...))
     { }
     template <class... _Xs>
-    inline explicit Tuple(X&& x, _Xs&&... xs):
+    inline explicit Tuple(X&& x, _Xs&&... xs) :
         m_(xx::move(x), Xs(xx::move(xs)...))
     { }
 
@@ -184,17 +184,13 @@ public:
     inline void get(const UInt<_is...>,
                     Custom<_is...>& t) const
     {
-        t.invoke([this](At<_is>&... xs) {
-            get(UInt<_is...>(), xs...);
-        });
+        t.set(*this);
     }
     template <uint... _is>
     inline void get(const UInt<_is...>,
                     Custom<_is...>&& t)
     {
-        t.invoke([this](At<_is>&... xs) {
-            get(UInt<_is...>(), xx::move(xs)...);
-        });
+        t.set(xx::move(*this));
     }
     template <uint... _is>
     inline void set(const UInt<_is...>,
@@ -289,7 +285,7 @@ public:
     // TODO: make true g/s for ranges
     template <uint _s, bool _r, class... _Xs>
     inline void getRange(const UInt<_s>,
-                         const Bool<false>,
+                         const False,
                          X& x, _Xs&... xs) const
     {
         x = m_.x;
@@ -297,7 +293,7 @@ public:
     }
     template <bool _r, class... _Xs>
     inline void getRange(const UInt<0>,
-                         const Bool<false>) const
+                         const False) const
     { /* stub */ }
 
     /* _______________ */
@@ -405,10 +401,10 @@ public:
     /* Invoke for range */
     template <uint _i, uint _s, class _F>
     inline auto invokeRange(const UInt<_i, _s>, _F func)
-    { return invokeRange(UInt<_i, _s>(), Bool<false>(), func); }
+    { return invokeRange(UInt<_i, _s>(), False(), func); }
     template <uint _i, uint _s, class _F>
     inline auto invokeRange(const UInt<_i, _s>, _F func) const
-    { return invokeRange(UInt<_i, _s>(), Bool<false>(), func); }
+    { return invokeRange(UInt<_i, _s>(), False(), func); }
 
     template <uint _i, uint _s, bool _r = false, class _F>
     inline auto invokeRange(const UInt<_i, _s>,
@@ -433,11 +429,11 @@ public:
 private:
     struct S
     {
-         S() { }
-        ~S() { }
+        inline  S() = default;
+        inline ~S() = default;
 
-        S(const X&  x_, const Xs&  xs_) : x (x_), xs(xs_) { }
-        S(      X&& x_,       Xs&& xs_) : x (x_), xs(xs_) { }
+        inline S(const X&  x_, const Xs&  xs_) : x(x_), xs(xs_) { }
+        inline S(      X&& x_,       Xs&& xs_) : x(x_), xs(xs_) { }
 
         X  x;
         Xs xs;
@@ -445,11 +441,11 @@ private:
 
     union U
     {
-         U() { }
-        ~U() { }
+        inline  U() : xs() { }
+        inline ~U()        { xs.~Xs(); }
 
-        U(const X& , const Xs& ) { }
-        U(      X&&,       Xs&&) { }
+        inline U(const X& , const Xs&  xs_) : xs(xs_) { }
+        inline U(      X&&,       Xs&& xs_) : xs(xs_) { }
 
         X  x;
         Xs xs;
@@ -489,8 +485,8 @@ protected:
 public:
     /* ____________ */
     /* Constructors */
-    inline Tuple()
-    { }
+    inline  Tuple() = default;
+    inline ~Tuple() = default;
 
     inline Tuple(const This&)
     { }

@@ -49,6 +49,10 @@ using ULong = Value<ulong, _xs...>;
 template <ulonglong... _xs>
 using ULongLong = Value<ulonglong, _xs...>;
 
+/* Bool aliases */
+using False = Bool<false>;
+using True = Bool<true>;
+
 /* Validator constraint */
 template <class _X, Type::E _e, TypeValidator<_X, _e>... _xs>
 struct Type::Validator<Value<_X, _xs...>, _e>
