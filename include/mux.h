@@ -35,6 +35,9 @@ public:
 template <uint _index, class... _Xs>
 using MuxType = typename Mux<_index, _Xs...>::Type;
 
+template <bool _first, class _X, class _Y>
+using MuxEither = MuxType<_first ? 0 : 1, _X, _Y>;
+
 template <uint _index, class... _Xs>
 inline auto mux(const UInt<_index>, _Xs&... xs)
 { return Mux<_index, _Xs...>::value(xs...); }

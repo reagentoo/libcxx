@@ -69,12 +69,10 @@ public:
     inline ~Tuple() = default;
 
     inline Tuple(const This& t) :
-        m_(t.m_.x,
-           t.m_.xs)
+        m_(t.m_)
     { }
     inline Tuple(This&& t) :
-        m_(xx::move(t.m_.x),
-           xx::move(t.m_.xs))
+        m_(xx::move(t.m_))
     { }
 
     template <class... _Xs>
@@ -94,11 +92,11 @@ public:
     { return neq(t); }
 
     template <uint _i>
-    inline auto& operator [](const UInt<_i>)
-    { return value(UInt<_i>()); }
+    inline auto& operator [](const UInt<_i> i)
+    { return value(i); }
     template <uint _i>
-    inline const auto& operator [](const UInt<_i>) const
-    { return value(UInt<_i>()); }
+    inline const auto& operator [](const UInt<_i> i) const
+    { return value(i); }
 
     inline auto& operator =(const This& t)
     { set(t); return *this; }
@@ -115,11 +113,11 @@ public:
     /* ____________________ */
     /* Simple value getters */
     template <uint _i>
-    inline auto& value(const UInt<_i>)
-    { return tail(UInt<_i>()).m_.x; }
+    inline auto& value(const UInt<_i> i)
+    { return tail(i).m_.x; }
     template <uint _i>
-    inline const auto& value(const UInt<_i>) const
-    { return tail(UInt<_i>()).m_.x; }
+    inline const auto& value(const UInt<_i> i) const
+    { return tail(i).m_.x; }
 
 #ifdef ENABLE_PLAIN_WRAPPERS
     template <uint _i>
@@ -193,19 +191,19 @@ public:
         t.set(xx::move(*this));
     }
     template <uint... _is>
-    inline void set(const UInt<_is...>,
+    inline void set(const UInt<_is...> is,
                     const Custom<_is...>& t)
     {
-        t.invoke([this](const At<_is>&... xs) {
-            set(UInt<_is...>(), xs...);
+        t.invoke([this, is](const At<_is>&... xs) {
+            set(is, xs...);
         });
     }
     template <uint... _is>
-    inline void set(const UInt<_is...>,
+    inline void set(const UInt<_is...> is,
                     Custom<_is...>&& t)
     {
-        t.invoke([this](At<_is>&... xs) {
-            set(UInt<_is...>(), xx::move(xs)...);
+        t.invoke([this, is](At<_is>&... xs) {
+            set(is, xx::move(xs)...);
         });
     }
 
@@ -300,10 +298,10 @@ public:
     /* Merge functions */
     template <uint _s, bool _r, class... _Xs>
     inline const auto& merge(const UInt<_s>,
-                             const Bool<_r>,
+                             const Bool<_r> r,
                              const T<Extreme<_s, _r>, _Xs...>& t)
     {
-        const auto& o = m_.xs.merge(UInt<_s - 1>(), Bool<_r>(), t.tail(UInt<_r ? 0 : 1>()));
+        const auto& o = m_.xs.merge(UInt<_s - 1>(), r, t.tail(UInt<_r ? 0 : 1>()));
         m_.x = mux(UInt<_r ? 0 : 1>(), o, t).m_.x;
         return o.tail(UInt<_r ? 1 : 0>());
     }
@@ -320,10 +318,10 @@ public:
 
     template <uint _s, bool _r, class... _Xs>
     inline const auto& merge(const UInt<_s>,
-                             const Bool<_r>,
+                             const Bool<_r> r,
                              T<Extreme<_s, _r>, _Xs...>&& t)
     {
-        const auto& o = m_.xs.merge(UInt<_s - 1>(), Bool<_r>(), xx::move(t.tail(UInt<_r ? 0 : 1>())));
+        const auto& o = m_.xs.merge(UInt<_s - 1>(), r, xx::move(t.tail(UInt<_r ? 0 : 1>())));
         m_.x = xx::move(mux(UInt<_r ? 0 : 1>(), o, t).m_.x);
         return o.tail(UInt<_r ? 1 : 0>());
     }
@@ -340,14 +338,14 @@ public:
 
     template <uint _i, uint _j, uint _s, bool _r, class _T>
     inline const auto& merge(const UInt<_i, _j, _s>,
-                             const Bool<_r>,
+                             const Bool<_r> r,
                              const _T& t)
-    { return tail(UInt<_i>()).merge(UInt<_s>(), Bool<_r>(), t.tail(UInt<_j>())); }
+    { return tail(UInt<_i>()).merge(UInt<_s>(), r, t.tail(UInt<_j>())); }
     template <uint _i, uint _j, uint _s, bool _r, class _T>
     inline const auto& merge(const UInt<_i, _j, _s>,
-                             const Bool<_r>,
+                             const Bool<_r> r,
                              _T&& t)
-    { return tail(UInt<_i>()).merge(UInt<_s>(), Bool<_r>(), xx::move(t.tail(UInt<_j>()))); }
+    { return tail(UInt<_i>()).merge(UInt<_s>(), r, xx::move(t.tail(UInt<_j>()))); }
 
 #ifdef ENABLE_PLAIN_WRAPPERS
     template <uint _s, bool _r, class _T>
@@ -400,11 +398,11 @@ public:
     /* ________________ */
     /* Invoke for range */
     template <uint _i, uint _s, class _F>
-    inline auto invokeRange(const UInt<_i, _s>, _F func)
-    { return invokeRange(UInt<_i, _s>(), False(), func); }
+    inline auto invokeRange(const UInt<_i, _s> is, _F func)
+    { return invokeRange(is, False(), func); }
     template <uint _i, uint _s, class _F>
-    inline auto invokeRange(const UInt<_i, _s>, _F func) const
-    { return invokeRange(UInt<_i, _s>(), False(), func); }
+    inline auto invokeRange(const UInt<_i, _s> is, _F func) const
+    { return invokeRange(is, False(), func); }
 
     template <uint _i, uint _s, bool _r = false, class _F>
     inline auto invokeRange(const UInt<_i, _s>,
@@ -432,8 +430,23 @@ private:
         inline  S() = default;
         inline ~S() = default;
 
-        inline S(const X&  x_, const Xs&  xs_) : x(x_), xs(xs_) { }
-        inline S(      X&& x_,       Xs&& xs_) : x(x_), xs(xs_) { }
+        inline S(const S& s_) :
+            x(s_.x),
+            xs(s_.xs)
+        { }
+        inline S(S&& s_) :
+            x(xx::move(s_.x)),
+            xs(xx::move(s_.xs))
+        { }
+
+        inline explicit S(const X& x_, const Xs& xs_) :
+            x(x_),
+            xs(xs_)
+        { }
+        inline explicit S(X&& x_, Xs&& xs_) :
+            x(xx::move(x_)),
+            xs(xx::move(xs_))
+        { }
 
         X  x;
         Xs xs;
@@ -442,16 +455,27 @@ private:
     union U
     {
         inline  U() : xs() { }
-        inline ~U()        { xs.~Xs(); }
+        inline ~U() { xs.~Xs(); }
 
-        inline U(const X& , const Xs&  xs_) : xs(xs_) { }
-        inline U(      X&&,       Xs&& xs_) : xs(xs_) { }
+        inline U(const U& u_) :
+            xs(u_.xs)
+        { }
+        inline U(U&& u_) :
+            xs(xx::move(u_.xs))
+        { }
+
+        inline explicit U(const X& , const Xs& xs_) :
+            xs(xs_)
+        { }
+        inline explicit U(X&&, Xs&& xs_) :
+            xs(xx::move(xs_))
+        { }
 
         X  x;
         Xs xs;
     };
 
-    MuxType<_union ? 1 : 0, S, U> m_;
+    MuxEither<_union, U, S> m_;
 };
 
 /* Tuple container constraint*/
