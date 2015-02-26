@@ -6,11 +6,17 @@
 
 #include <backend.h>
 #include <global.h>
+#include <same.h>
 #include <tuple.h>
 #include <type_traits.h>
 #include <value_traits.h>
 
 using namespace xx;
+
+struct Foo {};
+struct Bar : Foo {};
+
+using S = SameType<Bar, Bar>;
 
 struct MoveTest
 {
