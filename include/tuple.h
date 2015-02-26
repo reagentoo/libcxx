@@ -15,10 +15,11 @@ class Tuple
 {
     template <bool, class...>
     friend class Tuple;
-    using This = Tuple<_union, _Pack...>;
 
     template <class... _Xs>
     using T = Tuple<_union, _Xs...>;
+
+    using This = T<_Pack...>;
 
     template <uint _i>
     using At = MuxType<_i, _Pack...>;
@@ -484,10 +485,11 @@ class Tuple<_union>
 {
     template <bool, class...>
     friend class Tuple;
-    using This = Tuple<_union>;
 
     template <class... _Xs>
     using T = Tuple<_union, _Xs...>;
+
+    using This = T<>;
 
 protected:
     /* ________________ */
@@ -540,6 +542,8 @@ public:
     /* Base getters/setters */
     inline void get(This&) const
     { }
+    inline void get(This&&)
+    { }
     inline void set(const This&)
     { }
     inline void set(This&&)
@@ -557,7 +561,9 @@ public:
     inline void get(const UInt<>,
                     This&) const
     { }
-
+    inline void get(const UInt<>,
+                    This&&)
+    { }
     inline void set(const UInt<>,
                     const This&)
     { }
@@ -569,7 +575,9 @@ public:
     template <uint... _is>
     inline void get(This& t) const
     { get(UInt<_is...>(), t); }
-
+    template <uint... _is>
+    inline void get(This&& t)
+    { get(UInt<_is...>(), xx::move(t)); }
     template <uint... _is>
     inline void set(const This& t)
     { set(UInt<_is...>(), t); }
@@ -582,7 +590,6 @@ public:
     /* Partial getters/setters (separated) */
     inline void get(const UInt<>) const
     { }
-
     inline void set(const UInt<>)
     { }
 
@@ -590,7 +597,6 @@ public:
     template <uint... _is>
     inline void get() const
     { get(UInt<_is...>()); }
-
     template <uint... _is>
     inline void set()
     { set(UInt<_is...>()); }
