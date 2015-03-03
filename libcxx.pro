@@ -25,6 +25,7 @@ HEADERS += \
     include/type_traits.h \
     include/value_traits.h \
     include/variadic_traits.h \
-    include/range.h
+    include/range.h \
+    include/whole.h
 
 SOURCES += tests/tuple.cpp

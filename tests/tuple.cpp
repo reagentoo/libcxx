@@ -10,6 +10,7 @@
 #include <tuple.h>
 #include <type_traits.h>
 #include <value_traits.h>
+#include <whole.h>
 
 using namespace xx;
 
@@ -25,9 +26,93 @@ struct MoveTest
     MoveTest(MoveTest&&) { std::cout << "move" << std::endl; int i = move(i); }
 };
 
+class WholeTest
+{
+public:
+    WholeTest()
+    { std::cout << "W ctor" << std::endl; }
+    ~WholeTest()
+    { std::cout << "W dtor" << std::endl; }
+
+    WholeTest(const WholeTest&)
+    { std::cout << "W ctor copy" << std::endl; }
+    WholeTest(WholeTest&&) noexcept
+    { std::cout << "W ctor move" << std::endl; }
+
+    bool operator ==(const WholeTest&) const
+    {
+        std::cout << "W eq" << std::endl;
+        return true;
+    }
+
+    WholeTest& operator =(const WholeTest&)
+    {
+        std::cout << "W copy" << std::endl;
+        return *this;
+    }
+
+    WholeTest& operator =(WholeTest&&)
+    {
+        std::cout << "W move" << std::endl;
+        return *this;
+    }
+};
+
+class WholeTestDeleted
+{
+public:
+    WholeTestDeleted() = delete;
+    ~WholeTestDeleted() = delete;
+
+    WholeTestDeleted(const WholeTestDeleted&) = delete;
+    WholeTestDeleted(WholeTestDeleted&&) noexcept = delete;
+
+    bool operator ==(const WholeTestDeleted&) const = delete;
+    WholeTestDeleted& operator =(const WholeTestDeleted&) = delete;
+};
+
+class WholeTestWrong
+{
+public:
+    WholeTestWrong(int) {}
+
+    int operator ==(const WholeTestWrong&) const { return 1; }
+    bool operator ==(const int&) const { return true; }
+
+    int operator =(const WholeTestWrong&) { return 1; }
+    WholeTestWrong& operator =(const int&) { return *this; }
+};
+
+void whole_test()
+{
+    std::cout << "Whole scalar test:" << std::endl;
+    Whole<int> i;
+    Whole<int> ii(i);
+
+    std::cout << "WholeTest:" << std::endl;
+    Whole<WholeTest> w;
+    Whole<WholeTest> w1(w);
+    Whole<WholeTest> w2(std::move(w));
+
+    std::cout << "WholeTestDeleted:" << std::endl;
+    Whole<WholeTestDeleted> d;
+    Whole<WholeTestDeleted> d1(d);
+    Whole<WholeTestDeleted> d2(std::move(d));
+
+    std::cout << "WholeTestWrong:" << std::endl;
+    Whole<WholeTestWrong> wr;
+    Whole<WholeTestWrong> wr1(wr);
+    Whole<WholeTestWrong> wr2(std::move(wr));
+
+    std::cout << "All dtors:" << std::endl;
+}
+
 int main(int argc, char *argv[])
 {
     unused(argc, argv);
+
+    //whole_test();
+    try { whole_test(); } catch (...) {}
 
     MoveTest mt(mt);
     MoveTest mt2(xx::move(mt));
