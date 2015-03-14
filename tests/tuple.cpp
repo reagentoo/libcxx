@@ -10,6 +10,7 @@
 #include <tuple.h>
 #include <type_traits.h>
 #include <value_traits.h>
+#include <variant.h>
 #include <whole.h>
 
 using namespace xx;
@@ -114,9 +115,16 @@ int main(int argc, char *argv[])
     //whole_test();
     try { whole_test(); } catch (...) {}
 
-    MoveTest mt(mt);
+    //
+    //Variant<int, char, std::string, double> v1 = UInt<2>();
+    Variant<int, char, std::string, double> v(0);
+    Variant<int, char, std::string, double> v1 = 2;
+    Variant<int, char, std::string, double> v11 = UInt<2>();
+
+    MoveTest mt;
+    MoveTest mt1(mt);
     MoveTest mt2(xx::move(mt));
-    unused(mt2);
+    unused(mt1, mt2);
 
     int i;
     char c;

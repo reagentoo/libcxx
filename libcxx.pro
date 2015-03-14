@@ -25,6 +25,7 @@ HEADERS += \
     include/type_traits.h \
     include/value_traits.h \
     include/variadic_traits.h \
+    include/variant.h \
     include/range.h \
     include/whole.h
 
