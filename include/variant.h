@@ -41,8 +41,64 @@ class Variant
         } d[m_size];
     };
 
-    using Hs = typename RangeExpand<0, m_size>
-    ::template Get<Handlers>;
+    using Hs = RangeExpand<0, m_size, false, Handlers>;
+
+    template <uint _i>
+    static void ctor(Xs& xs)
+    {
+        auto i = UInt<_i>();
+        new (&xs[i]) At<_i>;
+    }
+    template <uint _i>
+    static void dtor(Xs& xs)
+    {
+        // TODO: try to remove
+        // this alias with clang 3.7
+        using A = At<_i>;
+
+        auto i = UInt<_i>();
+        xs[i].~A();
+    }
+
+    template <uint _i>
+    static void ctor_copy(Xs& xs, const Xs& src)
+    {
+        auto i = UInt<_i>();
+        new (&xs[i]) At<_i> (src[i]);
+    }
+    template <uint _i>
+    static void ctor_move(Xs& xs, Xs& src)
+    {
+        auto i = UInt<_i>();
+        new (&xs[i]) At<_i> (xx::move(src[i]));
+    }
+
+    template <uint _i>
+    static bool eq(const Xs& xs, const Xs& src)
+    {
+        auto i = UInt<_i>();
+        return xs[i] == src[i];
+    }
+
+    template <uint _i>
+    static bool neq(const Xs& xs, const Xs& src)
+    {
+        auto i = UInt<_i>();
+        return xs[i] != src[i];
+    }
+
+    template <uint _i>
+    static void copy(Xs& xs, const Xs& src)
+    {
+        auto i = UInt<_i>();
+        xs[i] = src[i];
+    }
+    template <uint _i>
+    static void move(Xs& xs, Xs& src)
+    {
+        auto i = UInt<_i>();
+        xs[i] = xx::move(src[i]);
+    }
 
 public:
     inline Variant()
@@ -123,64 +179,6 @@ public:
     { }
 
 private:
-    template <uint _i>
-    static void ctor(Xs& xs)
-    {
-        auto i = UInt<_i>();
-        new (&xs[i]) At<_i>;
-    }
-    template <uint _i>
-    static void dtor(Xs& xs)
-    {
-        // TODO: try to remove
-        // this alias with clang 3.7
-        using A = At<_i>;
-
-        auto i = UInt<_i>();
-        xs[i].~A();
-    }
-
-    template <uint _i>
-    static void ctor_copy(Xs& xs, const Xs& src)
-    {
-        auto i = UInt<_i>();
-        new (&xs[i]) At<_i> (src[i]);
-    }
-    template <uint _i>
-    static void ctor_move(Xs& xs, Xs& src)
-    {
-        auto i = UInt<_i>();
-        new (&xs[i]) At<_i> (xx::move(src[i]));
-    }
-
-    template <uint _i>
-    static bool eq(const Xs& xs, const Xs& src)
-    {
-        auto i = UInt<_i>();
-        return xs[i] == src[i];
-    }
-
-    template <uint _i>
-    static bool neq(const Xs& xs, const Xs& src)
-    {
-        auto i = UInt<_i>();
-        return xs[i] != src[i];
-    }
-
-    template <uint _i>
-    static void copy(Xs& xs, const Xs& src)
-    {
-        auto i = UInt<_i>();
-        xs[i] = src[i];
-    }
-    template <uint _i>
-    static void move(Xs& xs, Xs& src)
-    {
-        auto i = UInt<_i>();
-        xs[i] = xx::move(src[i]);
-    }
-
-public:
     uint m_index;
 
     Hs m_hs;

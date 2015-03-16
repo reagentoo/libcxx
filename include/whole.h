@@ -82,24 +82,28 @@ union Whole {
     template<class _Z, class _Y>
     inline auto sfinae(const Try<Sfinae::Neq>, const _Y& y) const
     -> SameType<_Z, decltype(declref<X>() != y)>
-    { return m_x == y; }
+    { return m_x != y; }
 
     /* ____________ */
     /* sfinae stubs */
     template <class _Z, Sfinae _s>
     inline _Z sfinae(const Try<_s>) const
-    { throw -1; }
+    { return sfinae_throw<_Z>(_s, 0); }
     template <class _Z, Sfinae _s, class... _Ys>
     inline _Z sfinae(const Try<_s>, const _Ys&...) const
-    { return sfinae<_Z>(Try<_s>()); }
+    { return sfinae_throw<_Z>(_s, sizeof...(_Ys)); }
 
     /* TODO: try to uncomment
      * this stub function in gcc-5.x.x. */
     /*
     template <class _Z, Sfinae _s, class... _Ys>
     inline _Z sfinae(const Try<_s>, _Ys&&...) const
-    { return sfinae<_Z>(Try<_s>()); }
+    { return sfinae_throw<_Z>(_s, sizeof...(_Ys)); }
     */
+
+    template <class _Z>
+    inline _Z sfinae_throw(Sfinae, int) const
+    { throw -1; }
 
 public:
     /* _________ */

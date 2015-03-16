@@ -1,6 +1,7 @@
 #ifndef RANGE_H
 #define RANGE_H
 
+#include <type_traits.h>
 #include <value_traits.h>
 
 namespace xx {
@@ -49,9 +50,11 @@ public:
 };
 
 /* Range::Expand alias */
-template <uint _index, uint _size, bool _reverse = false>
+template <uint _index, uint _size, bool _reverse = false,
+          template <uint...> class _Successor = UInt>
 using RangeExpand = typename Range<_index, _size, _reverse>
-::template Expand<>;
+::template Expand<>
+::template Get<_Successor>;
 
 }
 
