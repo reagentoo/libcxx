@@ -34,16 +34,23 @@ private:
         CtorMv,
         CopyMv,
 
-        Inc,    //TODO
-        IncSf,  //TODO
-        Dec,    //TODO
-        DecSf,  //TODO
-
         Add,
         Sub,
         Mul,
         Div,
         Mod,
+
+        Dec,
+        DecSf,
+        Inc,
+        IncSf,
+
+        Neg,
+        AndBw,
+        OrBw,
+        Xor,
+        Shift,
+        RShift,
 
         Eq,
         Neq,
@@ -52,16 +59,9 @@ private:
         Less,
         LessEq,
 
-        Not, //TODO
+        Not,
         And,
-        Or,
-
-        BitNeg, //TODO
-        BitAnd,
-        BitOr,
-        BitXor,
-        BitShift,
-        BitRShift,
+        Or
     };
 
     template <Sfinae _s>
@@ -103,25 +103,71 @@ private:
     /* ___________________________ */
     /* sfinae arithmetic operators */
     template<class _Z, class _Y>
-    inline auto sfinae(const Try<Sfinae::Add>, const _Y& y)
+    inline auto sfinae(const Try<Sfinae::Add>, const _Y& y) const
     -> SameType<_Z, decltype(declref<X>() + y)>
     { return m_x + y; }
     template<class _Z, class _Y>
-    inline auto sfinae(const Try<Sfinae::Sub>, const _Y& y)
+    inline auto sfinae(const Try<Sfinae::Sub>, const _Y& y) const
     -> SameType<_Z, decltype(declref<X>() - y)>
     { return m_x - y; }
     template<class _Z, class _Y>
-    inline auto sfinae(const Try<Sfinae::Mul>, const _Y& y)
+    inline auto sfinae(const Try<Sfinae::Mul>, const _Y& y) const
     -> SameType<_Z, decltype(declref<X>() * y)>
     { return m_x * y; }
     template<class _Z, class _Y>
-    inline auto sfinae(const Try<Sfinae::Div>, const _Y& y)
+    inline auto sfinae(const Try<Sfinae::Div>, const _Y& y) const
     -> SameType<_Z, decltype(declref<X>() / y)>
     { return m_x / y; }
     template<class _Z, class _Y>
-    inline auto sfinae(const Try<Sfinae::Mod>, const _Y& y)
+    inline auto sfinae(const Try<Sfinae::Mod>, const _Y& y) const
     -> SameType<_Z, decltype(declref<X>() % y)>
     { return m_x % y; }
+
+    /* _________________________________ */
+    /* sfinae unary arithmetic operators */
+    template<class _Z, class... _Ys>
+    inline auto sfinae(const Try<Sfinae::Dec>)
+    -> SameType<_Z, decltype(--declref<X>(declref<_Ys>()...))>
+    { return --m_x; }
+    template<class _Z, class... _Ys>
+    inline auto sfinae(const Try<Sfinae::DecSf>)
+    -> SameType<_Z, decltype(declref<X>(declref<_Ys>()...)--)>
+    { return m_x--; }
+    template<class _Z, class... _Ys>
+    inline auto sfinae(const Try<Sfinae::Inc>)
+    -> SameType<_Z, decltype(++declref<X>(declref<_Ys>()...))>
+    { return ++m_x; }
+    template<class _Z, class... _Ys>
+    inline auto sfinae(const Try<Sfinae::IncSf>)
+    -> SameType<_Z, decltype(declref<X>(declref<_Ys>()...)++)>
+    { return m_x++; }
+
+    /* ________________________ */
+    /* sfinae bitwise operators */
+    template<class _Z, class... _Ys>
+    inline auto sfinae(const Try<Sfinae::Neg>)
+    -> SameType<_Z, decltype(~declref<X>(declref<_Ys>()...))>
+    { return ~m_x; }
+    template<class _Z, class _Y>
+    inline auto sfinae(const Try<Sfinae::AndBw>, const _Y& y) const
+    -> SameType<_Z, decltype(declref<X>() & y)>
+    { return m_x & y; }
+    template<class _Z, class _Y>
+    inline auto sfinae(const Try<Sfinae::OrBw>, const _Y& y) const
+    -> SameType<_Z, decltype(declref<X>() | y)>
+    { return m_x | y; }
+    template<class _Z, class _Y>
+    inline auto sfinae(const Try<Sfinae::Xor>, const _Y& y) const
+    -> SameType<_Z, decltype(declref<X>() ^ y)>
+    { return m_x ^ y; }
+    template<class _Z, class _Y>
+    inline auto sfinae(const Try<Sfinae::Shift>, const _Y& y) const
+    -> SameType<_Z, decltype(declref<X>() << y)>
+    { return m_x << y; }
+    template<class _Z, class _Y>
+    inline auto sfinae(const Try<Sfinae::RShift>, const _Y& y) const
+    -> SameType<_Z, decltype(declref<X>() >> y)>
+    { return m_x >> y; }
 
     /* ____________________________ */
     /* sfinae comparation operators */
@@ -152,6 +198,10 @@ private:
 
     /* ________________________ */
     /* sfinae logical operators */
+    template<class _Z, class... _Ys>
+    inline auto sfinae(const Try<Sfinae::Not>) const
+    -> SameType<_Z, decltype(!declref<X>(declref<_Ys>()...))>
+    { return !m_x; }
     template<class _Z, class _Y>
     inline auto sfinae(const Try<Sfinae::And>, const _Y& y) const
     -> SameType<_Z, decltype(declref<X>() && y)>
@@ -160,29 +210,6 @@ private:
     inline auto sfinae(const Try<Sfinae::Or>, const _Y& y) const
     -> SameType<_Z, decltype(declref<X>() || y)>
     { return m_x || y; }
-
-    /* ________________________ */
-    /* sfinae bitwise operators */
-    template<class _Z, class _Y>
-    inline auto sfinae(const Try<Sfinae::BitAnd>, const _Y& y) const
-    -> SameType<_Z, decltype(declref<X>() & y)>
-    { return m_x & y; }
-    template<class _Z, class _Y>
-    inline auto sfinae(const Try<Sfinae::BitOr>, const _Y& y) const
-    -> SameType<_Z, decltype(declref<X>() | y)>
-    { return m_x | y; }
-    template<class _Z, class _Y>
-    inline auto sfinae(const Try<Sfinae::BitXor>, const _Y& y) const
-    -> SameType<_Z, decltype(declref<X>() ^ y)>
-    { return m_x ^ y; }
-    template<class _Z, class _Y>
-    inline auto sfinae(const Try<Sfinae::BitShift>, const _Y& y) const
-    -> SameType<_Z, decltype(declref<X>() << y)>
-    { return m_x << y; }
-    template<class _Z, class _Y>
-    inline auto sfinae(const Try<Sfinae::BitRShift>, const _Y& y) const
-    -> SameType<_Z, decltype(declref<X>() >> y)>
-    { return m_x >> y; }
 
     /* ____________ */
     /* sfinae stubs */
@@ -194,7 +221,7 @@ private:
     { return sfinae_throw<_Z>(_s, sizeof...(_Ys)); }
 
     /* TODO: try to uncomment
-     * this stub function in gcc-5.x.x. */
+     * this stub function with gcc-5.x.x. */
     /*
     template <class _Z, Sfinae _s, class... _Ys>
     inline _Z sfinae(const Try<_s>, _Ys&&...) const
@@ -220,8 +247,8 @@ public:
     inline Whole(This&& t)
     { sfinae<X&>(Try<Sfinae::CtorMv>(), std::move(t.m_x)); }
 
-    /* ___________________ */
-    /* copy/move operators */
+    /* _______________ */
+    /* copy/move ctors */
     template <class... _Ys>
     inline Whole(const W<_Ys>&... ys)
     { sfinae<X&>(Try<Sfinae::Ctor>(), ys.m_x...); }
@@ -244,29 +271,85 @@ public:
 
     /* ____________________ */
     /* arithmetic operators */
-    auto operator +(const This& t)
+    auto operator +(const This& t) const
     {
         sfinae<X&>(Try<Sfinae::Add>(), t.m_x);
         return *this;
     }
-    auto operator -(const This& t)
+    auto operator -(const This& t) const
     {
         sfinae<X&>(Try<Sfinae::Sub>(), t.m_x);
         return *this;
     }
-    auto operator *(const This& t)
+    auto operator *(const This& t) const
     {
         sfinae<X&>(Try<Sfinae::Mul>(), t.m_x);
         return *this;
     }
-    auto operator /(const This& t)
+    auto operator /(const This& t) const
     {
         sfinae<X&>(Try<Sfinae::Div>(), t.m_x);
         return *this;
     }
-    auto operator %(const This& t)
+    auto operator %(const This& t) const
     {
         sfinae<X&>(Try<Sfinae::Mod>(), t.m_x);
+        return *this;
+    }
+
+    /* __________________________ */
+    /* unary arithmetic operators */
+    auto operator --()
+    {
+        sfinae<X&>(Try<Sfinae::Dec>());
+        return *this;
+    }
+    auto operator --(int)
+    {
+        sfinae<X&>(Try<Sfinae::DecSf>());
+        return *this;
+    }
+    auto operator ++()
+    {
+        sfinae<X&>(Try<Sfinae::Inc>());
+        return *this;
+    }
+    auto operator ++(int)
+    {
+        sfinae<X&>(Try<Sfinae::IncSf>());
+        return *this;
+    }
+
+    /* _________________ */
+    /* bitwise operators */
+    auto operator ~()
+    {
+        sfinae<X&>(Try<Sfinae::Neg>());
+        return *this;
+    }
+    auto operator &(const This& t) const
+    {
+        sfinae<X&>(Try<Sfinae::AndBw>(), t.m_x);
+        return *this;
+    }
+    auto operator |(const This& t) const
+    {
+        sfinae<X&>(Try<Sfinae::OrBw>(), t.m_x);
+        return *this;
+    }
+    auto operator ^(const This& t) const
+    {
+        sfinae<X&>(Try<Sfinae::Xor>(), t.m_x);
+        return *this;
+    }
+    auto operator <<(const This& t) const
+    {
+        sfinae<X&>(Try<Sfinae::Shift>(), t.m_x);
+        return *this;
+    }
+    auto operator >>(const This& t) const
+    {
+        sfinae<X&>(Try<Sfinae::RShift>(), t.m_x);
         return *this;
     }
 
@@ -287,38 +370,12 @@ public:
 
     /* _________________ */
     /* logical operators */
+    auto operator !() const
+    { return sfinae<bool>(Try<Sfinae::Not>()); }
     auto operator &&(const This& t) const
     { return sfinae<bool>(Try<Sfinae::And>(), t.m_x); }
     auto operator ||(const This& t) const
     { return sfinae<bool>(Try<Sfinae::Or>(), t.m_x); }
-
-    /* _________________ */
-    /* bitwise operators */
-    auto operator &(const This& t) const
-    {
-        sfinae<X&>(Try<Sfinae::BitAnd>(), t.m_x);
-        return *this;
-    }
-    auto operator |(const This& t) const
-    {
-        sfinae<X&>(Try<Sfinae::BitOr>(), t.m_x);
-        return *this;
-    }
-    auto operator ^(const This& t) const
-    {
-        sfinae<X&>(Try<Sfinae::BitXor>(), t.m_x);
-        return *this;
-    }
-    auto operator <<(const This& t) const
-    {
-        sfinae<X&>(Try<Sfinae::BitShift>(), t.m_x);
-        return *this;
-    }
-    auto operator >>(const This& t) const
-    {
-        sfinae<X&>(Try<Sfinae::BitRShift>(), t.m_x);
-        return *this;
-    }
 
     inline auto& value()
     { return m_x; }

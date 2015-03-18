@@ -57,6 +57,12 @@ public:
         std::cout << "W move" << std::endl;
         return *this;
     }
+
+    bool operator !() const
+    {
+        std::cout << "W not" << std::endl;
+        return true;
+    }
 };
 
 class WholeTestDeleted
@@ -70,6 +76,8 @@ public:
 
     bool operator ==(const WholeTestDeleted&) const = delete;
     WholeTestDeleted& operator =(const WholeTestDeleted&) = delete;
+
+    bool operator !() const = delete;
 };
 
 class WholeTestWrong
@@ -82,6 +90,8 @@ public:
 
     int operator =(const WholeTestWrong&) { return 1; }
     WholeTestWrong& operator =(const int&) { return *this; }
+
+    bool operator !() const { return true; }
 };
 
 void whole_test()
@@ -90,20 +100,28 @@ void whole_test()
     Whole<int> i;
     Whole<int> ii(i);
 
+    !ii;
+
     std::cout << "WholeTest:" << std::endl;
     Whole<WholeTest> w;
     Whole<WholeTest> w1(w);
     Whole<WholeTest> w2(std::move(w));
+
+    !w;
 
     std::cout << "WholeTestDeleted:" << std::endl;
     Whole<WholeTestDeleted> d;
     Whole<WholeTestDeleted> d1(d);
     Whole<WholeTestDeleted> d2(std::move(d));
 
+    !d;
+
     std::cout << "WholeTestWrong:" << std::endl;
     Whole<WholeTestWrong> wr;
     Whole<WholeTestWrong> wr1(wr);
     Whole<WholeTestWrong> wr2(std::move(wr));
+
+    !wr;
 
     std::cout << "All dtors:" << std::endl;
 }
