@@ -4,15 +4,16 @@ CONFIG += console
 CONFIG -= app_bundle
 CONFIG -= qt
 
-#QMAKE_CC = clang
-#QMAKE_CXX = clang++
-#QMAKE_LINK = clang++
-QMAKE_CC = gcc-4.9.2
-QMAKE_CXX = g++-4.9.2
-QMAKE_LINK = g++-4.9.2
+QMAKE_CC = clang
+QMAKE_CXX = clang++
+QMAKE_LINK = clang++
+#QMAKE_CC = gcc-4.9.2
+#QMAKE_CXX = g++-4.9.2
+#QMAKE_LINK = g++-4.9.2
 
 #QMAKE_CXXFLAGS += -std=c++0x
-QMAKE_CXXFLAGS += -std=c++1y
+#QMAKE_CXXFLAGS += -std=c++1y
+CONFIG += c++14
 
 INCLUDEPATH += include
 

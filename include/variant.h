@@ -53,7 +53,7 @@ class Variant
     static void dtor(Xs& xs)
     {
         // TODO: try to remove
-        // this alias with clang 3.7
+        // this alias with clang 4.0.0
         using A = At<_i>;
 
         auto i = UInt<_i>();
